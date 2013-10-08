@@ -1,13 +1,13 @@
 {
   "name": "grunt-igdeploy",
   "version": "0.0.1",
+  "private": true,
   "description": "A grunt task to handle deployment to static content server.",
   "homepage": "https://github.com/ft-interactive/grunt-igdeploy",
   "repository": "git+https://github.com/ft-interactive/grunt-igdeploy.git",
   "bugs": "git+https://github.com/ft-interactive/grunt-igdeploy.git/issues",
   "author": {
     "name": "Callum Locke",
-    "email": "",
     "url": "https://github.com/callumlocke"
   },
   "keywords": [
@@ -21,11 +21,6 @@
     "type": "git",
     "url": "git+https://github.com/ft-interactive/grunt-igdeploy.git"
   },
-  "licenses": [
-    {
-      "type": "None"
-    }
-  ],
   "devDependencies": {
     "grunt-contrib-jshint": "~0.2.0",
     "grunt-contrib-nodeunit": "~0.1.2",
