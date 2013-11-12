@@ -48,7 +48,7 @@ module.exports = function (grunt) {
     // Build options object
     var options = this.options({
       port: 22,
-      remoteDirPrefix: ''
+      targetRoot: ''
     });
 
     // Find the closest .igdeploy file and merge it into the options
@@ -62,8 +62,8 @@ module.exports = function (grunt) {
 
     function briefName(name) {
       // Return a 'brief' version of a remote filename, for logging purposes.
-      if (options.remoteDirPrefix && name.substring(0,options.remoteDirPrefix.length) === options.remoteDirPrefix)
-        return name.substring(options.remoteDirPrefix.length + 1);
+      if (options.targetRoot && name.substring(0,options.targetRoot.length) === options.targetRoot)
+        return name.substring(options.targetRoot.length + 1);
       return name;
     }
 
@@ -101,7 +101,7 @@ module.exports = function (grunt) {
       // Upload all files
       // log('options', options);
 
-      var remoteDir = path.join(options.remoteDirPrefix, options.remoteDir),
+      var remoteDir = path.join(options.targetRoot, options.remoteDir),
           remoteDirTempOld = remoteDir + '_IGDEPLOY_OLD',
           remoteDirTempNew = remoteDir + '_IGDEPLOY_NEW',
           remoteDirBasename = path.basename(remoteDir),

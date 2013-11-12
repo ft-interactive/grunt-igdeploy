@@ -5,6 +5,9 @@
 **None of this is implemented, it's just a rough plan for the task's API.**
 
 ## Basic usage
+
+    npm install -D git+https://github.com/callumlocke/grunt-igdeploy.git
+
 ```js
 grunt.loadNpmTasks('grunt-igdeploy');
 
