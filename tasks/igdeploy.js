@@ -25,15 +25,16 @@ module.exports = function (grunt) {
   // Function to find the closest file with the given name on the local filesystem - looking
   // first in the current directory, then in the parent, etc.
   var findClosestFile = function (name) {
-    var dir, filePath, stats;
+    var dir = process.cwd(),
+        filePath, stats;
     if (typeof name !== 'string' || !name.length)
       throw new Error('Not understood: ' + name);
     
     while (dir !== (dir = path.dirname(dir))) {
       filePath = path.join(dir, name);
+      console.log('Looking for', filePath);
       if (fs.existsSync(filePath)) {
         stats = fs.statSync(filePath);
-        // console.log(filePath);
         if (stats.isFile(filePath))
           return filePath;
       }
