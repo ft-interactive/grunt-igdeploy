@@ -49,14 +49,15 @@ If all your target paths share a long prefix, you can do this:
     targetRoot: '/long/path/to/remote/web/root',
     targets: {
       staging: 'staging',
-      prod: 'prod'
+      prod: 'prod',
+      foobar: '/foo/bar'
     }
   }
 ```
 
 Now `grunt igdeploy:staging` will upload `./dist` to `/long/path/to/remote/web/root/staging`.
 
-Note: if a target path begins with a `/`, it will be considered absolute, and will never be prefixed with the `targetRoot`.
+Note: if a target path begins with a `/`, it will be considered absolute, and will never be prefixed with the `targetRoot`. So in the above example, `grunt igdeploy:foobar` will upload `./dist` to `/foo/bar`.
 
 
 ### Ad hoc targets
