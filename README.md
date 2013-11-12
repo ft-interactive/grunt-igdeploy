@@ -25,7 +25,7 @@ grunt.initConfig({
 })
 ```
 
-Also create a file named `.igdeploy` (and `.gitignore` it!):
+Also create a file named `.igdeploy` in the following format:
 
 ```json
 {
@@ -33,6 +33,8 @@ Also create a file named `.igdeploy` (and `.gitignore` it!):
   "password": "kittenz"
 }
 ```
+
+You can put your `.igdeploy` in any ascendant directory of your project, eg, your home directory. (Or you can put it directly in your project directory, but be careful not to commit it!)
 
 Then run: `grunt igdeploy:staging`. This will upload `./dist` to replace `/web/staging` on the server.
 
