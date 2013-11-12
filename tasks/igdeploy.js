@@ -52,21 +52,29 @@ module.exports = function (grunt) {
       targetRoot: ''
     });
 
-    // Verify that one of the targets is selected
-    if (!options.targets[target]) {
-      grunt.log.warn('Deploy target "' + target + '" not found in config.');
-      grunt.log.warn('Available deploy targets: ' + _.keys(options.targets).join(', '));
-      grunt.log.fatal('Cannot continue.');
-    }
-
     // Find the closest .igdeploy file and merge it into the options
     var extraConfigPath = findClosestFile('.igdeploy');
     if (extraConfigPath) {
       log('Using additional config from ' + extraConfigPath); // TODO: specify which actual file, if not the local one.
       extend(true, options, grunt.file.readJSON(extraConfigPath));
     }
+    else {
+      grunt.log.warn('No .igdeploy file found.');
+    }
 
     // console.log('options', options);
+
+    // Verify that one of the targets is selected
+    if (!options.targets[target]) {
+      grunt.log.warn('Deploy target "' + target + '" not found in config.');
+      grunt.log.warn('Available deploy targets: ' + _.keys(options.targets).join(', '));
+      grunt.fatal('Cannot continue.');
+    }
+
+    // Verify we have a username and password
+    if (!options.username || !options.password) {
+      grunt.fatal('Username and/or password missing - please define them in an .igdeploy file.');
+    }
 
     function briefName(name) {
       // Return a 'brief' version of a remote filename, for logging purposes.
@@ -130,7 +138,7 @@ module.exports = function (grunt) {
             if (!err) {
               grunt.log.warn(chalk.red('Problem'), 'Something already exists at ' + remoteDirName);
               grunt.log.warn('Please delete it.');
-              grunt.fail.fatal('Cannot continue if file already exists.');
+              grunt.fatal('Cannot continue if file already exists.');
             }
             else {
               remoteMkdirp(remoteDirName, function () {
