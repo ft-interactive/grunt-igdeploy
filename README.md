@@ -10,7 +10,7 @@ grunt.loadNpmTasks('grunt-igdeploy');
 
 grunt.initConfig({
   igdeploy: {
-    src: './dist',
+    src: 'dist',
     server: 'example.com',
     targets: {
       staging: '/web/staging',
@@ -31,7 +31,7 @@ Also create a file named `.igdeploy` (and `.gitignore` it!):
 
 Then run: `grunt igdeploy:staging`. This will upload `./dist` to replace `/web/staging` on the server.
 
-Note: the .igdeploy file will be automatically merged into the config, so you can include any other options in that file that you might want to hide away.
+Note: the .igdeploy file will be automatically merged into the task config, so you can also include other options here too.
 
 
 ## More options
@@ -41,7 +41,7 @@ If all your target paths share a long prefix, you can do this:
 
 ```js
   igdeploy: {
-    src: './dist',
+    src: 'dist',
     server: 'example.com',
     targetRoot: '/long/path/to/remote/web/root',
     targets: {
@@ -59,7 +59,7 @@ Note: if a target path begins with a `/`, it will be considered absolute, and wi
 ### Ad hoc targets
 ```js
   igdeploy: {
-    src: './dist',
+    src: 'dist',
     server: 'example.com',
     targetRoot: '/long/path/to/remote/web/root',
     adHocTargets: true

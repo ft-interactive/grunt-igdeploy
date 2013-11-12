@@ -2,50 +2,285 @@
  * grunt-igdeploy
  * https://github.com/ft-interactive/grunt-igdeploy
  *
- * Copyright (c) 2013 Callum Locke
- * Licensed under the None license.
+ * Copyright (c) 2013 Financial Times
  */
 
 'use strict';
 
 module.exports = function (grunt) {
 
-  // Please see the Grunt documentation for more information regarding task
-  // creation: http://gruntjs.com/creating-tasks
+  // Load dependencies
+  var extend = require('extend'),
+      path = require('path'),
+      fs = require('fs'),
+      Connection = require('ssh2'),
+      async = require('async'),
+      chalk = require('chalk');
 
-  grunt.registerMultiTask('igdeploy', 'A grunt task to handle deployment to static content server.', function () {
+  // Shortcuts for convenience
+  var log = grunt.log.ok;
+  var cyan = chalk.cyan;
 
-    // Merge task-specific and/or target-specific options with these defaults.
+  // Function to find the closest file with the given name on the local filesystem - looking
+  // first in the current directory, then in the parent, etc.
+  var findClosestFile = function (name) {
+    var dir, filePath, stats;
+    if (typeof name !== 'string' || !name.length)
+      throw new Error('Not understood: ' + name);
+    
+    while (dir !== (dir = path.dirname(dir))) {
+      filePath = path.join(dir, name);
+      if (fs.existsSync(filePath)) {
+        stats = fs.statSync(filePath);
+        // console.log(filePath);
+        if (stats.isFile(filePath))
+          return filePath;
+      }
+    }
+    return null;
+  };
+
+  // The igdeploy task
+  grunt.registerTask('igdeploy', 'Deploy projects to the FTI static server.', function (target) {
+
+    var done = this.async();
+
+    // Build options object
     var options = this.options({
-      punctuation: '.',
-      separator: ', '
+      port: 22,
+      remoteDirPrefix: ''
     });
 
-    // Iterate over all specified file groups.
-    this.files.forEach(function (file) {
-      // Concat specified files.
-      var src = file.src.filter(function (filepath) {
-        // Warn on and remove invalid source files (if nonull was set).
-        if (!grunt.file.exists(filepath)) {
-          grunt.log.warn('Source file "' + filepath + '" not found.');
-          return false;
-        } else {
-          return true;
+    // Find the closest .igdeploy file and merge it into the options
+    var extraConfigPath = findClosestFile('.igdeploy');
+    if (extraConfigPath) {
+      log('Using additional config from ' + extraConfigPath); // TODO: specify which actual file, if not the local one.
+      extend(true, options, grunt.file.readJSON(extraConfigPath));
+    }
+
+    // console.dir(options);
+
+    function briefName(name) {
+      // Return a 'brief' version of a remote filename, for logging purposes.
+      if (options.remoteDirPrefix && name.substring(0,options.remoteDirPrefix.length) === options.remoteDirPrefix)
+        return name.substring(options.remoteDirPrefix.length + 1);
+      return name;
+    }
+
+    // Connect to server!
+    var c = new Connection();
+    c.on('connect', function () {
+      log('Connected to ' + options.server);
+    });
+
+    c.on('end', function () {
+      log('Disconnected');
+      done();
+    });
+
+    c.on('banner', function (message) {
+      grunt.log.writeln(message);
+    });
+
+    c.on('keyboard-interactive', function (name, instructions, instructionsLang, prompts, finish) {
+      if (prompts) {
+        for (var i = prompts.length - 1; i >= 0; i--) {
+          if (prompts[i].prompt === 'Password: ') {
+            log('Signing in as ' + options.username);
+            finish([options.password]);
+            return;
+          }
         }
-      }).map(function (filepath) {
-        // Read file source.
-        return grunt.file.read(filepath);
-      }).join(grunt.util.normalizelf(options.separator));
+      }
+      finish();
+    });
 
-      // Handle options.
-      src += options.punctuation;
+    c.on('ready', function () {
+      log('Authenticated');
 
-      // Write the destination file.
-      grunt.file.write(file.dest, src);
+      // Upload all files
+      // log('options', options);
 
-      // Print a success message.
-      grunt.log.writeln('File "' + file.dest + '" created.');
+      var remoteDir = path.join(options.remoteDirPrefix, options.remoteDir),
+          remoteDirTempOld = remoteDir + '_IGDEPLOY_OLD',
+          remoteDirTempNew = remoteDir + '_IGDEPLOY_NEW',
+          remoteDirBasename = path.basename(remoteDir),
+          remoteDirTempOldBasename = path.basename(remoteDirTempOld),
+          remoteDirTempNewBasename = path.basename(remoteDirTempNew);
+
+      c.sftp(function (err, sftp) {
+        if (err) throw err;
+
+        log(chalk.yellow('SFTP starting'));
+
+        // Helpers
+        var uploadDirectory = function (localDirName, remoteDirName, callback) {
+          // log(cyan('UPLOADING DIRECTORY'), localDirName, cyan('-->'), remoteDirName);
+
+          // Ensure it doesn't already exist
+          sftp.stat(remoteDirName, function (err, stats) {
+            if (!err) {
+              grunt.log.warn(chalk.red('Problem'), 'Something already exists at ' + remoteDirName);
+              grunt.log.warn('Please delete it.');
+              throw new Error('Cannot continue.');
+            }
+            else {
+              remoteMkdirp(remoteDirName, function () {
+                log(cyan('Created'), briefName(remoteDirName));
+
+                // Now we need to asynchronously upload everything!
+                var allLocalFiles = fs.readdirSync(localDirName);
+
+                async.eachSeries(allLocalFiles, function (item, cb) {
+                  // console.log('ITEM: ', item);
+                  var from = path.join(localDirName, item),
+                      to = path.join(remoteDirName, item);
+
+                  // First check it's actually a file
+                  var stats = fs.statSync(from);
+                  if (stats.isFile()) {
+                    sftp.fastPut(from, to, function (err) {
+                      if (err)
+                        cb(err);
+                      else {
+                        log(cyan('Uploaded'), item);
+                        cb(null);
+                      }
+                    });
+                  }
+                  else if (stats.isDirectory()) {
+                    // log('RECURSING uploadDirectory', from, to);
+                    uploadDirectory(from, to, cb);
+                  }
+                  else {
+                    console.log('Unknown object', stats);
+                    throw new Error('Neither file nor directory: ' + from);
+                  }
+                }, function (err) {
+                  if (err) {
+                    grunt.log.warn(chalk.red('Problem'));
+                    throw err;
+                  }
+                  callback();
+                });
+              });
+            }
+          });
+        };
+
+        var remoteMkdirp = function (dir, callback) {
+          var pathParts = dir.split('/');
+          if (pathParts[0] !== '')
+            throw new Error('Should never happen!');
+          pathParts.shift();
+          // console.log('pathParts', pathParts);
+
+          var currentDir = '/';
+          function next() {
+            var nextPart = pathParts.shift();
+            // console.log('NEXT PART', nextPart);
+
+            if (nextPart) {
+              currentDir = path.join(currentDir, nextPart);
+              // console.log(cyan('Verifying exists'), currentDir);
+
+              sftp.stat(currentDir, function (err, stats) {
+                if (err) {
+                  // console.log('...' + chalk.green('no.'), 'Creating...');
+                  sftp.mkdir(currentDir, {mode: '775'}, function (err) {
+                    if (err) throw err;
+                    // console.log('...done creating!');
+                    next();
+                  });
+                }
+                else if (stats.isDirectory()) {
+                  // console.log('...' + chalk.green('yes.'));
+                  next();
+                }
+                else {
+                  console.dir(stats);
+                  grunt.fatal('Something (not a directory) already exists at: ' + currentDir);
+                }
+              });
+            }
+            else {
+              // log(cyan('mkdirp'), dir);
+              callback();
+            }
+          }
+          next();
+        };
+
+        var mvRemoteDirectory = function (oldPath, newPath, opts, callback) {
+          if (typeof opts === 'function' && !callback) {
+            callback = opts;
+            opts = {};
+          }
+          
+          sftp.rename(oldPath, newPath, function (err) {
+            if (err) {
+              if (opts.strict === true)
+                throw err;
+              else
+                callback(false);
+            }
+            else {
+              log(cyan('Renamed'), briefName(oldPath), cyan('--->'), briefName(newPath));
+              callback(true);
+            }
+          });
+        };
+
+        // var deleteRemoteDirectory = function (dir, callback) {
+
+        // };
+
+        function closeUpSFTP() {
+          log('Closing SFTP');
+          sftp.end();
+          // c.end();
+        }
+        // End helpers
+
+        sftp.on('close', function () {
+          log(chalk.yellow('SFTP session closed'));
+          c.end();
+        });
+
+        uploadDirectory(options.localDir, remoteDirTempNew, function () {
+          log(cyan('All files uploaded!'));
+
+          mvRemoteDirectory(remoteDir, remoteDirTempOld, {strict: false}, function (movedOldOne) {
+
+            mvRemoteDirectory(remoteDirTempNew, remoteDir, function () {
+
+              if (movedOldOne) {
+                log('ATTEMPTING TO DELETE DIRECTORY...', remoteDirTempOld);
+
+                c.exec('rm -rf "' + remoteDirTempOld + '"', function (err, stream) {
+                  if (err) throw err;
+
+                  log(cyan('Deleted'), remoteDirTempOldBasename);
+                  // console.log('stream', stream);
+                  closeUpSFTP();
+                });
+              }
+              else {
+                closeUpSFTP(); // ENDS
+              }
+            });
+          });
+        });
+      });
+    });
+
+    // Start the connection
+    c.connect({
+      host: options.server,
+      port: options.port,
+      username: options.username,
+      password: options.password,
+      tryKeyboard: true
     });
   });
-
 };

@@ -4,7 +4,10 @@
   "private": true,
   "description": "A grunt task to handle deployment to static content server.",
   "homepage": "https://github.com/ft-interactive/grunt-igdeploy",
-  "repository": "git+https://github.com/ft-interactive/grunt-igdeploy.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ft-interactive/grunt-igdeploy.git"
+  },
   "bugs": "git+https://github.com/ft-interactive/grunt-igdeploy.git/issues",
   "author": {
     "name": "Callum Locke",
@@ -17,10 +20,6 @@
   "engines": {
     "node": ">= 0.10.15"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ft-interactive/grunt-igdeploy.git"
-  },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.2.0",
     "grunt-contrib-nodeunit": "~0.1.2",
@@ -29,5 +28,11 @@
   },
   "scripts": {
     "test": "grunt test"
+  },
+  "dependencies": {
+    "extend": "~1.2.1",
+    "ssh2": "~0.2.12",
+    "async": "~0.2.9",
+    "chalk": "~0.2.1"
   }
 }
