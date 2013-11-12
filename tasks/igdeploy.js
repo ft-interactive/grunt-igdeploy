@@ -15,7 +15,8 @@ module.exports = function (grunt) {
       fs = require('fs'),
       Connection = require('ssh2'),
       async = require('async'),
-      chalk = require('chalk');
+      chalk = require('chalk'),
+      _ = require('underscore');
 
   // Shortcuts for convenience
   var log = grunt.log.ok;
@@ -51,6 +52,13 @@ module.exports = function (grunt) {
       targetRoot: ''
     });
 
+    // Verify that one of the targets is selected
+    if (!options.targets[target]) {
+      grunt.log.warn('Deploy target "' + target + '" not found in config.');
+      grunt.log.warn('Available deploy targets: ' + _.keys(options.targets).join(', '));
+      grunt.log.fatal('Cannot continue.');
+    }
+
     // Find the closest .igdeploy file and merge it into the options
     var extraConfigPath = findClosestFile('.igdeploy');
     if (extraConfigPath) {
@@ -58,7 +66,7 @@ module.exports = function (grunt) {
       extend(true, options, grunt.file.readJSON(extraConfigPath));
     }
 
-    // console.dir(options);
+    // console.log('options', options);
 
     function briefName(name) {
       // Return a 'brief' version of a remote filename, for logging purposes.
@@ -101,7 +109,7 @@ module.exports = function (grunt) {
       // Upload all files
       // log('options', options);
 
-      var remoteDir = path.join(options.targetRoot, options.remoteDir),
+      var remoteDir = options.targets[target][0] === '/' ? options.targets[target] : path.join(options.targetRoot, options.targets[target]),
           remoteDirTempOld = remoteDir + '_IGDEPLOY_OLD',
           remoteDirTempNew = remoteDir + '_IGDEPLOY_NEW',
           remoteDirBasename = path.basename(remoteDir),
@@ -122,7 +130,7 @@ module.exports = function (grunt) {
             if (!err) {
               grunt.log.warn(chalk.red('Problem'), 'Something already exists at ' + remoteDirName);
               grunt.log.warn('Please delete it.');
-              throw new Error('Cannot continue.');
+              grunt.fail.fatal('Cannot continue if file already exists.');
             }
             else {
               remoteMkdirp(remoteDirName, function () {
@@ -247,7 +255,7 @@ module.exports = function (grunt) {
           c.end();
         });
 
-        uploadDirectory(options.localDir, remoteDirTempNew, function () {
+        uploadDirectory(options.src, remoteDirTempNew, function () {
           log(cyan('All files uploaded!'));
 
           mvRemoteDirectory(remoteDir, remoteDirTempOld, {strict: false}, function (movedOldOne) {

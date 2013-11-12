@@ -13,11 +13,13 @@ grunt.loadNpmTasks('grunt-igdeploy');
 
 grunt.initConfig({
   igdeploy: {
-    src: 'dist',
-    server: 'example.com',
-    targets: {
-      staging: '/web/staging',
-      production: '/web/prod'
+    options: {
+      src: 'dist',
+      server: 'example.com',
+      targets: {
+        staging: '/web/staging',
+        production: '/web/prod'
+      }
     }
   }
 })
@@ -44,13 +46,15 @@ If all your target paths share a long prefix, you can do this:
 
 ```js
   igdeploy: {
-    src: 'dist',
-    server: 'example.com',
-    targetRoot: '/long/path/to/remote/web/root',
-    targets: {
-      staging: 'staging',
-      prod: 'prod',
-      foobar: '/foo/bar'
+    options: {
+      src: 'dist',
+      server: 'example.com',
+      targetRoot: '/long/path/to/remote/web/root',
+      targets: {
+        staging: 'staging',
+        prod: 'prod',
+        foobar: '/foo/bar'
+      }
     }
   }
 ```
@@ -61,27 +65,20 @@ Note: if a target path begins with a `/`, it will be considered absolute, and wi
 
 
 ### Ad hoc targets
+
+> This feature is not yet implemented!
+
 ```js
   igdeploy: {
-    src: 'dist',
-    server: 'example.com',
-    targetRoot: '/long/path/to/remote/web/root',
-    adHocTargets: true
+    options: {
+      src: 'dist',
+      server: 'example.com',
+      targetRoot: '/long/path/to/remote/web/root',
+      adHocTargets: true
+    }
   }
 ```
 
-This way you can choose a subdirectory name at the time you run the task. For example `grunt igdeploy:v12-demo` will upload `./dist` to `/long/path/to/remote/web/root/v12-demo`.
+If you enable `adHocTargets`, you'll be allowed to specify a custom subdirectory name whenever you run the task, without it being pre-defined as a target. For example `grunt igdeploy:v12-demo` will upload `./dist` to `/long/path/to/remote/web/root/v12-demo`.
 
 NB: if you specify named `targets` as well as allowing ad hoc targets, the named targets will take precedence. So if you did `grunt igdeploy:foo`, it will first look for a target named `foo`, then if not found, it will just upload it as a folder called `foo`.
-
-
-## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
-
-
-## Release History
-_(Nothing yet)_
-
-
-## License
-Copyright (c) 2013 Callum Locke. Licensed under the None license.
