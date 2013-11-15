@@ -1,8 +1,6 @@
 # grunt-igdeploy
 
-> A grunt task to handle deployment to the FTI static content server.
-
-**None of this is implemented, it's just a rough plan for the task's API.**
+A grunt task to handle deployment to the FTI static content server.
 
 ## Basic usage
 
