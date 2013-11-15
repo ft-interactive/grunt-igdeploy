@@ -4,7 +4,7 @@ A grunt task to handle deployment to the FTI static content server.
 
 ## Basic usage
 
-    npm install -D git+https://github.com/ft-interactive/grunt-igdeploy.git
+    npm install --save-dev git+https://github.com/ft-interactive/grunt-igdeploy.git
 
 ```js
 grunt.loadNpmTasks('grunt-igdeploy');
