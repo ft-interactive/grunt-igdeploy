@@ -1,6 +1,6 @@
 {
   "name": "grunt-igdeploy",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Grunt task for the FT's igdeploy module",
   "homepage": "https://github.com/ft-interactive/grunt-igdeploy",
   "repository": {
@@ -18,6 +18,5 @@
   "engines": {
     "node": ">= 0.10.15"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
