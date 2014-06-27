@@ -1,14 +1,13 @@
 {
   "name": "grunt-igdeploy",
   "version": "0.0.1",
-  "private": true,
-  "description": "A grunt task to handle deployment to static content server.",
+  "description": "Grunt task for the FT's igdeploy module",
   "homepage": "https://github.com/ft-interactive/grunt-igdeploy",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ft-interactive/grunt-igdeploy.git"
+    "url": "https://github.com/ft-interactive/grunt-igdeploy.git"
   },
-  "bugs": "git+https://github.com/ft-interactive/grunt-igdeploy.git/issues",
+  "bugs": "https://github.com/ft-interactive/grunt-igdeploy.git/issues",
   "author": {
     "name": "Callum Locke",
     "url": "https://github.com/callumlocke"
@@ -16,24 +15,9 @@
   "keywords": [
     "gruntplugin"
   ],
-  "main": "Gruntfile.js",
   "engines": {
     "node": ">= 0.10.15"
   },
-  "devDependencies": {
-    "grunt-contrib-jshint": "~0.2.0",
-    "grunt-contrib-nodeunit": "~0.1.2",
-    "grunt-contrib-clean": "~0.4.0",
-    "grunt": "~0.4.1"
-  },
-  "scripts": {
-    "test": "grunt test"
-  },
   "dependencies": {
-    "extend": "~1.2.1",
-    "ssh2": "~0.2.12",
-    "async": "~0.2.9",
-    "chalk": "~0.2.1",
-    "underscore": "~1.5.2"
   }
 }

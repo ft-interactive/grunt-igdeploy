@@ -1,8 +1,6 @@
 # grunt-igdeploy
 
-> A grunt task to handle deployment to the FTI static content server.
-
-**None of this is implemented, it's just a rough plan for the task's API.**
+> A grunt task to deploy to the FTI static content server. (Intended for internal FT use; may or may not work on your server.)
 
 ## Basic usage
 
@@ -15,17 +13,29 @@ grunt.initConfig({
   igdeploy: {
     options: {
       src: 'dist',
-      server: 'example.com',
-      targets: {
-        staging: '/web/staging',
-        production: '/web/prod'
+      host: 'example.com',
+      destPrefix: '/some/long/path/to/your/web/root'
+    },
+
+    staging: {
+      options: {
+        dest: 'your/staging/dir'
+      }
+    },
+
+    production: {
+      options: {
+        dest: 'your/prod/dir'
       }
     }
   }
 })
 ```
 
-Also create a file named `.igdeploy` in the following format:
+The `destPrefix` option will be used as the base for the `dest` option, i.e. `path.join(options.destPrefix, options.dest)`. (Exception: if any target's `dest` begins with a `/`, that `dest` will be considered absolute, and will not be prefixed with the `destPrefix`.)
+
+
+You should also create a file named `.igdeploy` in the following format:
 
 ```json
 {
@@ -34,53 +44,18 @@ Also create a file named `.igdeploy` in the following format:
 }
 ```
 
-You can put your `.igdeploy` in any ascendant directory of your project, eg, your home directory. (Or you can put it directly in your project directory, but be careful not to commit it!)
+You can put your `.igdeploy` in any ascendant directory of your project, eg, your home directory. (Or you can put it directly in your project directory, but be careful not to commit it.)
 
-Then run: `grunt igdeploy:staging`. This will upload `./dist` to replace `/web/staging` on the server.
-
-Note: the .igdeploy file will be automatically merged into the task config, so you can also include other options here too.
+The contents of your `.igdeploy` file will be merged into the options passed to [igdeploy](#). (But options specified in your gruntfile take priority). You can put any sensitive options in your `.igdeploy` file if you don't want to commit them. Note the options from `.igdeploy` are merged in *after* Grunt has resolved the options object for whatever target you're running – so you can't put target-specific options in the `.igdeploy` file.
 
 
-## More options
 
-### `targetRoot`
-If all your target paths share a long prefix, you can do this:
+### Running it
 
-```js
-  igdeploy: {
-    options: {
-      src: 'dist',
-      server: 'example.com',
-      targetRoot: '/long/path/to/remote/web/root',
-      targets: {
-        staging: 'staging',
-        prod: 'prod',
-        foobar: '/foo/bar'
-      }
-    }
-  }
-```
+Then run: `grunt igdeploy:staging`.
 
-Now `grunt igdeploy:staging` will upload `./dist` to `/long/path/to/remote/web/root/staging`.
+In the above example, this would upload `./dist` to `/some/long/path/to/your/web/root/foo/staging` on `example.com`.
 
-Note: if a target path begins with a `/`, it will be considered absolute, and will never be prefixed with the `targetRoot`. So in the above example, `grunt igdeploy:foobar` will upload `./dist` to `/foo/bar`.
+If the target directory already exists, it will be renamed with `__IGDEPLOY_OLD` after it.
 
-
-### Ad hoc targets
-
-> This feature is not yet implemented!
-
-```js
-  igdeploy: {
-    options: {
-      src: 'dist',
-      server: 'example.com',
-      targetRoot: '/long/path/to/remote/web/root',
-      adHocTargets: true
-    }
-  }
-```
-
-If you enable `adHocTargets`, you'll be allowed to specify a custom subdirectory name whenever you run the task, without it being pre-defined as a target. For example `grunt igdeploy:v12-demo` will upload `./dist` to `/long/path/to/remote/web/root/v12-demo`.
-
-NB: if you specify named `targets` as well as allowing ad hoc targets, the named targets will take precedence. So if you did `grunt igdeploy:foo`, it will first look for a target named `foo`, then if not found, it will just upload it as a folder called `foo`.
+If you set the option `undo: true`, this will put igdeploy into 'undo mode'. This means it doesn't upload anything; instead it just looks for the `[yourpath]__IGDEPLOY_OLD` folder and swaps it with the `[yourpath]` folder. So you only get one chance to `undo` – subsequent runs will just undo the undo. Like Photoshop.
