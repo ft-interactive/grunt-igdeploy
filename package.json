@@ -18,5 +18,7 @@
   "engines": {
     "node": ">= 0.10.15"
   },
-  "dependencies": {}
+  "dependencies": {
+    "igdeploy": "0.0.1"
+  }
 }
