@@ -2,9 +2,10 @@
 
 > A grunt task to deploy to the FTI static content server. (Intended for internal FT use; may or may not work on your server.)
 
+
 ## Basic usage
 
-    npm install -D git+https://github.com/callumlocke/grunt-igdeploy.git
+    npm install --save-dev grunt-igdeploy
 
 ```js
 grunt.loadNpmTasks('grunt-igdeploy');
