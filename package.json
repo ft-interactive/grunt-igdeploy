@@ -19,6 +19,6 @@
     "node": ">= 0.10.15"
   },
   "dependencies": {
-    "igdeploy": "0.0.1"
+    "igdeploy": "0.1.0"
   }
 }
